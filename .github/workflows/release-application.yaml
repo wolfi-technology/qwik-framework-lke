@@ -1,0 +1,109 @@
+name: Create Image & Deploy Platform with Helm
+on:
+  push:
+    tags: ["[0-9]+.[0-9]+.[0-9]+"]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  NAMESPACE: qwik-framework-lke # replace with the actual name of the namespace.
+  HELM_RELEASE_NAME: qwik-framework-lke # replace with the name of the helm chart for your application.
+  HUSKY: 0
+
+jobs:
+  create_image_and_deploy_platform:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      actions: read
+      attestations: write # remove this if you don't want to utilize attestation for docker image build.
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Container Registry Login
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build Docker Image & Push
+        id: push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Generate Artifact Attestation
+        id: attest
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: ${{ github.event_name != 'pull_request' }}
+
+      - name: Setup Kubectl For Deployment
+        uses: azure/setup-kubectl@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: "latest"
+
+      - name: Setup Access To Linode LKE
+        uses: azure/k8s-set-context@v4
+        with:
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Check For Namespace
+        run: |
+          if kubectl get namespace ${{ env.NAMESPACE }} &> /dev/null; then
+            echo "Namespace '${{ env.NAMESPACE }}' already exists."
+          else
+            echo "Creating namespace '${{ env.NAMESPACE }}.'"
+            kubectl create namespace ${{ env.NAMESPACE }}
+            echo "Namespace '${{ env.NAMESPACE }}' was created successfully"
+          fi
+
+      - name: Create or Update Pull Secret
+        uses: Azure/k8s-create-secret@v4
+        with:
+          namespace: ${{ env.NAMESPACE }}
+          container-registry-url: ${{ env.REGISTRY }}
+          container-registry-username: ${{ github.actor }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          secret-name: regcred
+
+      - name: Deploy Platform Application
+        run: |
+          helm upgrade --install --force ${{ env.HELM_RELEASE_NAME }} ./helm-chart \
+            --namespace ${{ env.NAMESPACE }} \
+            --create-namespace \
+            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set image.tag=${{ github.ref_name }} \
+            --set imagePullSecrets[0].name=regcred \
+            --set example.variable=${{ secrets.RANDOM_SECRET }}
+
+      - name: Verify Deployment
+        run: |
+          kubectl get pods -n ${{ env.NAMESPACE }}
+          kubectl describe deployment ${{ env.HELM_RELEASE_NAME }} -n ${{ env.NAMESPACE }}

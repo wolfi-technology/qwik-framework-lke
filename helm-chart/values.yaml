@@ -1,0 +1,47 @@
+image:
+  repository: ghcr.io/wolfi-technology/qwik-framework-lke
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    ingress.kubernetes.io/force-ssl-redirect: "true"
+    kubernetes.io/ingress.class: contour
+    kubernetes.io/tls-acme: "true"
+    projectcontour.io/response-timeout: "120s"
+  tls:
+    - secretName: qwik-framework-lke-tls
+      hosts:
+        - lke-example.wolfisolutions.tech
+  hosts:
+    - host: lke-example.wolfisolutions.tech
+      paths:
+        - path: /
+          pathType: Prefix
+          port: 80
+certificate:
+  enabled: true
+  duration: "2160h"
+  renewBefore: "360h"
+  organizations:
+    - "Wolfi Solutions LLC"
+  dnsNames:
+    - lke-example.wolfisolutions.tech
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  secretName: qwik-framework-lke-tls
+
+example:
+  variable: "I am just a place holder as an example!!!"

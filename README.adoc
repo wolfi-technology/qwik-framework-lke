@@ -1,0 +1,11 @@
+= Wolfi Qwik Framework Starter
+
+The point of this repository is to provide a starting point and a template that can be easily modified and deployed to a **Kubernetes** cluster.
+This repository is open sourced as it pertains to how to use a specific technology with **GitHub** actions for deployment to a cluster.
+However, it will not fit all deployment types and should be evaluated if you are wanting to utilize the template.
+Occasionally there will be updates to the template in order to reflect changes in our methodology or changes in versioning that are currently being utilized.
+
+I hope that this template will help the community adopt this awesome framework, but there is no intention on providing more information on deployment.
+Here at **Wolfi Solutions** we utilize Qwik, but it might not fit every developer or organization that is using our repository for getting started.
+The first and for most is that our company needs and versions will take priority over for this repository.
+Please feel free to **fork** the repository and make modifications to fit specific use cases.

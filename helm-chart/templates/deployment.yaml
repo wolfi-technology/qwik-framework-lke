@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "qwik-framework-lke.fullname" . }}
+  labels: {{- include "qwik-framework-lke.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: {{- include "qwik-framework-lke.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "qwik-framework-lke.selectorLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets: {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: EXAMPLE_ENVIRONMENT_VARIABLE
+              value: {{ .Values.example.variable }}

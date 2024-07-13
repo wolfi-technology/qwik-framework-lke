@@ -1,0 +1,6 @@
+apiVersion: v2
+name: qwik-framework-lke
+description: A helm chart that is a template for utilizing with Helm, LKE, GitHub Actions
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

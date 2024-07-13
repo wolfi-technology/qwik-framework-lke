@@ -1,0 +1,19 @@
+name: Issue Auto Assign
+on:
+  issues:
+    types: ["opened"]
+  pull_request:
+    types: ["opened"]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: "Auto Assign Issue"
+        uses: pozil/auto-assign-issue@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          assignees: catlincox # this should be replaced with your own user.
+          numOfAssignee: 1

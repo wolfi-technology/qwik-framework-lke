@@ -1,0 +1,24 @@
+{{- if .Values.certificate.enabled -}}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "qwik-framework-lke.fullname" . }}-tls
+  labels:
+    {{- include "qwik-framework-lke.labels" . | nindent 4 }}
+spec:
+  duration: {{ .Values.certificate.duration | quote }}
+  renewBefore: {{ .Values.certificate.renewBefore | quote }}
+  subject:
+    organizations:
+      {{- range .Values.certificate.organizations }}
+      - {{ . | quote }}
+      {{- end }}
+  dnsNames:
+    {{- range .Values.certificate.dnsNames }}
+    - {{ . | quote }}
+    {{- end }}
+  issuerRef:
+    name: {{ .Values.certificate.issuerRef.name }}
+    kind: {{ .Values.certificate.issuerRef.kind }}
+  secretName: {{ .Values.certificate.secretName }}
+{{- end }}

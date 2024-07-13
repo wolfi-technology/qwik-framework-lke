@@ -1,0 +1,32 @@
+### Visual Studio Code ###
+.vscode/*
+!.vscode/*.code-snippets
+
+### Node & Bun Generated ###
+dist/
+lib-types/
+lib/
+server/
+node_modules
+*.log*
+
+### Cache Generated ###
+.cache
+.mf
+.rollup.cache
+tsconfig.tsbuildinfo
+
+### Environment Generated ###
+.env
+.env.local
+.env.test
+.env.prod
+!.env.example
+
+# Build
+/dist
+/lib
+/lib-types
+/server
+
+helm-chart/
