@@ -54,7 +54,7 @@
     "undici": "*",
     "vite": "^5.2.10",
     "vite-tsconfig-paths": "^4.2.1",
-    "vitest": "^2.1.0"
+    "vitest": "^2.1.1"
   },
   "dependencies": {
     "express": "4.19.2"
